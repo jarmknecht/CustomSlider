@@ -100,6 +100,7 @@ public class MySeekBar extends View
                     }
                     currValue = event.getX();
                     circleCenter.y = viewTopLeft.y + topPadding;
+                    currValue = maxValue;
                 }
                 // draw it on the screen.
                 break;

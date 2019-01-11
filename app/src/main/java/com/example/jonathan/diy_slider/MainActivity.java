@@ -19,5 +19,6 @@ public class MainActivity extends AppCompatActivity {
         FrameLayout layout = (FrameLayout) findViewById (R.id.seekbar_placeholder);
         layout.addView(mySeekBar);
 
+
     }
 }
