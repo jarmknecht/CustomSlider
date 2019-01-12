@@ -98,9 +98,10 @@ public class MySeekBar extends View
                     else {
                         circleCenter.x = event.getX();
                     }
-                    currValue = event.getX();
+
                     circleCenter.y = viewTopLeft.y + topPadding;
-                    currValue = maxValue;
+                    currValue = maxValue * ((circleCenter.x - (viewTopLeft.x + radiusOfThumb)) /
+                            ((viewBottomRight.x - radiusOfThumb) - (viewTopLeft.x + radiusOfThumb)));
                 }
                 // draw it on the screen.
                 break;

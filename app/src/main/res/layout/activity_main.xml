@@ -24,7 +24,7 @@
         android:id="@+id/sliderValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="50"
+        android:text="0.0"
         android:textColor="#000"
         android:textSize="30sp"
         app:layout_constraintLeft_toLeftOf="parent"
