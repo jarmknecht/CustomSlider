@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.icu.util.Measure;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +34,7 @@ public class MySeekBar extends View
     private float thumbPadding = 4;
     private float vertPadding;
     private int numThumbs;
+    private float percentOfScreen;
     private ArrayList<MySeekbarListener> listeners;
     Paint myPaint;
     Paint movingPaint;
@@ -41,10 +43,12 @@ public class MySeekBar extends View
         public void onValueChanged(List<Float> values, MySeekBar mySeekBar);
     }
 
-    public MySeekBar(Context context, float thumbRadius, float vertPadding, int numThumbs, float minValue, float maxValue) {
+    public MySeekBar(Context context, float thumbRadius, float vertPadding, float percentOfScreen,
+                     int numThumbs, float minValue, float maxValue) {
         super(context);
         //circleCenter = new PointF(0f,0f);
         this.numThumbs = numThumbs;
+        this.percentOfScreen = percentOfScreen;
         listeners = new ArrayList<>();
         viewTopLeft = new PointF(this.getLeft(),this.getRight());
         viewBottomRight = new PointF(this.getRight(),this.getBottom());
@@ -77,6 +81,21 @@ public class MySeekBar extends View
         //circleCenter = new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding);
 
         invalidate();
+    }
+
+    @Override
+    public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int width = 200;
+        if (MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED) {
+            width = (int) (MeasureSpec.getSize(widthMeasureSpec) * percentOfScreen / 100);
+        }
+
+        int height = (int) (radiusOfThumb * 2f + vertPadding * 2);
+        if (MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.UNSPECIFIED) {
+            height = MeasureSpec.getSize(heightMeasureSpec);
+        }
+
+        setMeasuredDimension(width, height);
     }
 
 
