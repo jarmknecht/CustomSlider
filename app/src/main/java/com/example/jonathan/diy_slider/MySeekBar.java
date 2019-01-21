@@ -31,6 +31,8 @@ public class MySeekBar extends View
     private float minValue = 0;
     private float maxValue = 100;
     private float thumbPadding = 4;
+    private float vertPadding;
+    private int numThumbs;
     private ArrayList<MySeekbarListener> listeners;
     Paint myPaint;
     Paint movingPaint;
@@ -39,9 +41,10 @@ public class MySeekBar extends View
         public void onValueChanged(List<Float> values, MySeekBar mySeekBar);
     }
 
-    public MySeekBar(Context context, float thumbRadius, int numThumbs, float minValue, float maxValue) {
+    public MySeekBar(Context context, float thumbRadius, float vertPadding, int numThumbs, float minValue, float maxValue) {
         super(context);
         //circleCenter = new PointF(0f,0f);
+        this.numThumbs = numThumbs;
         listeners = new ArrayList<>();
         viewTopLeft = new PointF(this.getLeft(),this.getRight());
         viewBottomRight = new PointF(this.getRight(),this.getBottom());
@@ -61,13 +64,14 @@ public class MySeekBar extends View
 
         this.minValue = minValue;
         this.maxValue = maxValue;
+        this.vertPadding = vertPadding;
 
         circleCenters = new ArrayList<>();
         values = new ArrayList<>();
 
         for (int i = 0; i < numThumbs; i++) {
             values.add(minValue);
-            circleCenters.add(new PointF(viewTopLeft.x + radiusOfThumb + i * 2 * radiusOfThumb, viewTopLeft.y + topPadding));
+            circleCenters.add(new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding));
 
         }
         //circleCenter = new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding);
@@ -200,5 +204,9 @@ public class MySeekBar extends View
 
     public float getCurrValue() {
         return this.currValue;
+    }
+
+    public int getNumThumbs() {
+        return this.numThumbs;
     }
 }

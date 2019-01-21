@@ -17,13 +17,19 @@ public class MainActivity extends AppCompatActivity implements MySeekBar.MySeekb
 
         //instantiate my two thumbed seekbar.
         //final MySeekBar mySeekBar = new MySeekBar(this);
-        //(thumb radius, number of thumbs, minValue, maxValue)
-        final MySeekBar mySeekBar = new MySeekBar(this, 50f, 3, 19f, 59f);
+        //float thumbRadius, float vertPadding, int numThumbs, float minValue, float maxValue)
+        final MySeekBar mySeekBar = new MySeekBar(this, 50f, 3f, 4, 10f, 1000f);
         mySeekBar.addAsListener(this);
 
         // add it to the layout.
         FrameLayout layout = (FrameLayout) findViewById (R.id.seekbar_placeholder);
         layout.addView(mySeekBar);
+        String strValue = String.valueOf((int) mySeekBar.getMinValue());
+        for (int i = 1; i < mySeekBar.getNumThumbs(); i++) {
+            strValue += String.valueOf(",\t" + (int)mySeekBar.getMinValue());
+        }
+        ((TextView) findViewById(R.id.sliderValue)).setText(strValue);
+
 
         /*mySeekBar.setOnTouchListener(new View.OnTouchListener() {
             @Override
