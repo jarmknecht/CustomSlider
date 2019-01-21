@@ -6,8 +6,9 @@ import android.view.MotionEvent;
 import android.widget.FrameLayout;
 import android.view.View;
 import android.widget.TextView;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MySeekBar.MySeekbarListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,17 +17,26 @@ public class MainActivity extends AppCompatActivity {
 
         //instantiate my two thumbed seekbar.
         final MySeekBar mySeekBar = new MySeekBar(this);
+        //(thumb radius, number of thumbs, minValue, maxValue)
+        //final MySeekBar mySeekBar = new MySeekBar(this, 50f, 3, 19f, 59f);
+        mySeekBar.addAsListener(this);
 
         // add it to the layout.
         FrameLayout layout = (FrameLayout) findViewById (R.id.seekbar_placeholder);
         layout.addView(mySeekBar);
 
-        mySeekBar.setOnTouchListener(new View.OnTouchListener() {
+        /*mySeekBar.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent e) {
-                ((TextView)view.getRootView().findViewById(R.id.sliderValue)).setText(String.valueOf(mySeekBar.getCurrValue()));
+                ((TextView)view.getRootView().findViewById(R.id.sliderValue)).setText(String.valueOf((int)mySeekBar.getCurrValue()));
+                //((TextView)view.getRootView().findViewById(R.id.sliderValue)).setText(String.valueOf(mySeekBar.getCurrValue()));
                 return false;
             }
-        });
+        });*/
+    }
+
+    @Override
+    public void onValueChanged(int value, MySeekBar mySeekBar) {
+        ((TextView)findViewById(R.id.sliderValue)).setText(String.valueOf(value));
     }
 }

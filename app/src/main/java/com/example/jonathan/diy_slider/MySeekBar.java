@@ -7,6 +7,7 @@ import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import java.util.ArrayList;
 
 /**
  * Created by mike on 6/14/2017.
@@ -25,12 +26,18 @@ public class MySeekBar extends View
     private float currValue;
     private float minValue = 0;
     private float maxValue = 100;
+    private ArrayList<MySeekbarListener> listeners;
     Paint myPaint;
     Paint movingPaint;
+
+    public interface MySeekbarListener {
+        public void onValueChanged(int value, MySeekBar mySeekBar);
+    }
 
     public MySeekBar(Context context) {
         super(context);
         //circleCenter = new PointF(0f,0f);
+        listeners = new ArrayList<>();
         viewTopLeft = new PointF(this.getLeft(),this.getRight());
         viewBottomRight = new PointF(this.getRight(),this.getBottom());
         isMoving = false;
@@ -63,7 +70,7 @@ public class MySeekBar extends View
 
         drawLineFromPoints (new PointF(viewTopLeft.x, viewTopLeft.y + topPadding),
                 new PointF(viewBottomRight.x, viewTopLeft.y + topPadding),canvas,myPaint);
-
+        //TODO: should i change the color?
         if (isMoving) {
             canvas.drawCircle(circleCenter.x, circleCenter.y, radiusOfThumb, movingPaint);
         }
@@ -85,35 +92,49 @@ public class MySeekBar extends View
     {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if (!touchedCircle(new PointF(event.getX(), event.getY()))) {
+                    break;
+                }
             case MotionEvent.ACTION_MOVE:
                 // get the location of the finger down.
-                if (event.getY() <= topPadding + radiusOfThumb) {
-                    isMoving = true;
-                    if (event.getX() < viewTopLeft.x + radiusOfThumb) {
-                        circleCenter.x = viewTopLeft.x + radiusOfThumb;
-                    }
-                    else if (event.getX() > viewBottomRight.x - radiusOfThumb) {
-                        circleCenter.x = viewBottomRight.x - radiusOfThumb;
-                    }
-                    else {
-                        circleCenter.x = event.getX();
-                    }
+                isMoving = true;
+                if (event.getX() < viewTopLeft.x + radiusOfThumb) {
+                    circleCenter.x = viewTopLeft.x + radiusOfThumb;
+                }
+                else if (event.getX() > viewBottomRight.x - radiusOfThumb) {
+                    circleCenter.x = viewBottomRight.x - radiusOfThumb;
+                }
+                else {
+                    circleCenter.x = event.getX();
+                }
 
-                    circleCenter.y = viewTopLeft.y + topPadding;
-                    currValue = maxValue * ((circleCenter.x - (viewTopLeft.x + radiusOfThumb)) /
-                            ((viewBottomRight.x - radiusOfThumb) - (viewTopLeft.x + radiusOfThumb)));
+                circleCenter.y = viewTopLeft.y + topPadding;
+                currValue = maxValue * ((circleCenter.x - (viewTopLeft.x + radiusOfThumb)) /
+                        ((viewBottomRight.x - radiusOfThumb) - (viewTopLeft.x + radiusOfThumb)));
+                for (MySeekbarListener listener : listeners) {
+                    listener.onValueChanged((int)currValue, this);
                 }
                 // draw it on the screen.
                 break;
             case MotionEvent.ACTION_UP:
                 isMoving = false;
-
                 break;
         }
 
 
         invalidate(); // make sure we force a redraw.
         return true;
+    }
+
+    public void addAsListener(MySeekbarListener listener) {
+        listeners.add(listener);
+    }
+
+    public boolean touchedCircle(PointF touchLocation) {
+        double inCircle = (double)radiusOfThumb + 4;
+        double locationOfTouch = (double) Math.sqrt(Math.pow(touchLocation.x - circleCenter.x, 2) +
+        Math.pow(touchLocation.y - circleCenter.y, 2));  //Uses the distance formula
+        return inCircle > locationOfTouch; //returns true if in the circle cause location of touch will be 0
     }
 
     public float getCurrValue() {
