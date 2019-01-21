@@ -3,11 +3,13 @@ package com.example.jonathan.diy_slider;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by mike on 6/14/2017.
@@ -17,7 +19,9 @@ import java.util.ArrayList;
 public class MySeekBar extends View
 {
 
-    private PointF circleCenter;
+    private List<PointF> circleCenters;
+    private Integer selectedCircle = null;
+    private List<Float> values;
     private PointF viewTopLeft;
     private PointF viewBottomRight;
     private boolean isMoving;
@@ -26,15 +30,16 @@ public class MySeekBar extends View
     private float currValue;
     private float minValue = 0;
     private float maxValue = 100;
+    private float thumbPadding = 4;
     private ArrayList<MySeekbarListener> listeners;
     Paint myPaint;
     Paint movingPaint;
 
     public interface MySeekbarListener {
-        public void onValueChanged(int value, MySeekBar mySeekBar);
+        public void onValueChanged(List<Float> values, MySeekBar mySeekBar);
     }
 
-    public MySeekBar(Context context) {
+    public MySeekBar(Context context, float thumbRadius, int numThumbs, float minValue, float maxValue) {
         super(context);
         //circleCenter = new PointF(0f,0f);
         listeners = new ArrayList<>();
@@ -51,10 +56,21 @@ public class MySeekBar extends View
         movingPaint.setAntiAlias(true);
         movingPaint.setTextSize(90f);
 
-        radiusOfThumb = 50f;
-        topPadding = radiusOfThumb + 10f;
+        radiusOfThumb = thumbRadius;
+        topPadding = radiusOfThumb + thumbPadding;
 
-        circleCenter = new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding);
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+
+        circleCenters = new ArrayList<>();
+        values = new ArrayList<>();
+
+        for (int i = 0; i < numThumbs; i++) {
+            values.add(minValue);
+            circleCenters.add(new PointF(viewTopLeft.x + radiusOfThumb + i * 2 * radiusOfThumb, viewTopLeft.y + topPadding));
+
+        }
+        //circleCenter = new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding);
 
         invalidate();
     }
@@ -68,14 +84,18 @@ public class MySeekBar extends View
         Log.d ("seek","on draw");
         super.onDraw(canvas);
 
+        for (PointF point : circleCenters) {
+            canvas.drawCircle(point.x, point.y, radiusOfThumb, myPaint);
+        }
         drawLineFromPoints (new PointF(viewTopLeft.x, viewTopLeft.y + topPadding),
                 new PointF(viewBottomRight.x, viewTopLeft.y + topPadding),canvas,myPaint);
         //TODO: should i change the color?
-        if (isMoving) {
-            canvas.drawCircle(circleCenter.x, circleCenter.y, radiusOfThumb, movingPaint);
-        }
-        else {
-            canvas.drawCircle(circleCenter.x, circleCenter.y, radiusOfThumb, myPaint);
+        if (selectedCircle != null) {
+            if (isMoving) {
+                canvas.drawCircle(circleCenters.get(selectedCircle).x, circleCenters.get(selectedCircle).y, radiusOfThumb, movingPaint);
+            } else {
+                canvas.drawCircle(circleCenters.get(selectedCircle).x, circleCenters.get(selectedCircle).y, radiusOfThumb, myPaint);
+            }
         }
         //Draws a line from point leftmost x value at the y pixel plus the padding to the point
         // at the end of the screen at the same height (topLefty + padding)
@@ -92,32 +112,34 @@ public class MySeekBar extends View
     {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (!touchedCircle(new PointF(event.getX(), event.getY()))) {
-                    break;
-                }
+                selectedCircle = getSelectedCircle(event.getX(), event.getY());
+                break;
             case MotionEvent.ACTION_MOVE:
                 // get the location of the finger down.
-                isMoving = true;
-                if (event.getX() < viewTopLeft.x + radiusOfThumb) {
-                    circleCenter.x = viewTopLeft.x + radiusOfThumb;
-                }
-                else if (event.getX() > viewBottomRight.x - radiusOfThumb) {
-                    circleCenter.x = viewBottomRight.x - radiusOfThumb;
-                }
-                else {
-                    circleCenter.x = event.getX();
-                }
+                if (selectedCircle != null) {
+                    isMoving = true;
+                    if (event.getX() < viewTopLeft.x + radiusOfThumb) {
+                        circleCenters.get(selectedCircle).x = viewTopLeft.x + radiusOfThumb;
+                    }
+                    else if (event.getX() > viewBottomRight.x - radiusOfThumb) {
+                        circleCenters.get(selectedCircle).x = viewBottomRight.x - radiusOfThumb;
+                    }
+                    else {
+                        circleCenters.get(selectedCircle).x = event.getX();
+                    }
 
-                circleCenter.y = viewTopLeft.y + topPadding;
-                currValue = maxValue * ((circleCenter.x - (viewTopLeft.x + radiusOfThumb)) /
-                        ((viewBottomRight.x - radiusOfThumb) - (viewTopLeft.x + radiusOfThumb)));
-                for (MySeekbarListener listener : listeners) {
-                    listener.onValueChanged((int)currValue, this);
+                    circleCenters.get(selectedCircle).y = viewTopLeft.y + topPadding;
+                    values.set(selectedCircle, minValue + (maxValue - minValue) * ((circleCenters.get(selectedCircle).x - (viewTopLeft.x + radiusOfThumb)) /
+                            ((viewBottomRight.x - radiusOfThumb) - (viewTopLeft.x + radiusOfThumb))));
+                    for (MySeekbarListener listener : listeners) {
+                        listener.onValueChanged(values, this);
+                    }
                 }
                 // draw it on the screen.
                 break;
             case MotionEvent.ACTION_UP:
                 isMoving = false;
+                selectedCircle = null;
                 break;
         }
 
@@ -130,11 +152,50 @@ public class MySeekBar extends View
         listeners.add(listener);
     }
 
-    public boolean touchedCircle(PointF touchLocation) {
-        double inCircle = (double)radiusOfThumb + 4;
-        double locationOfTouch = (double) Math.sqrt(Math.pow(touchLocation.x - circleCenter.x, 2) +
-        Math.pow(touchLocation.y - circleCenter.y, 2));  //Uses the distance formula
-        return inCircle > locationOfTouch; //returns true if in the circle cause location of touch will be 0
+
+    private double getDistanceFromCircle(float x, float y, PointF circle) {
+        return Math.sqrt(Math.pow(x - circle.x, 2) +
+                Math.pow(y - circle.y, 2));  //Uses the distance formula
+    }
+
+    private Integer getSelectedCircle(float x, float y) {
+        double minDistance = 99;
+        Integer circle = null;
+
+        for (int i = 0; i < circleCenters.size(); i++) {
+            double distance = getDistanceFromCircle(x, y, circleCenters.get(i));
+            if (distance < minDistance && distance < radiusOfThumb + thumbPadding) {
+                minDistance = distance;
+                circle = i;
+            }
+        }
+
+        return circle;
+    }
+
+    public float getRadiusOfThumb(){
+        return radiusOfThumb;
+    }
+
+    public void setRadiusOfThumb(float radiusOfThumb) {
+        this.radiusOfThumb = radiusOfThumb;
+        invalidate();
+    }
+
+    public float getMinValue() {
+        return minValue;
+    }
+
+    public void setMinValue(float minValue) {
+        this.minValue = minValue;
+    }
+
+    public float getMaxValue() {
+        return maxValue;
+    }
+
+    public void setMaxValue(float maxValue) {
+        this.maxValue = maxValue;
     }
 
     public float getCurrValue() {

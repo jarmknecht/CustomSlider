@@ -16,9 +16,9 @@ public class MainActivity extends AppCompatActivity implements MySeekBar.MySeekb
         setContentView(R.layout.activity_main);
 
         //instantiate my two thumbed seekbar.
-        final MySeekBar mySeekBar = new MySeekBar(this);
+        //final MySeekBar mySeekBar = new MySeekBar(this);
         //(thumb radius, number of thumbs, minValue, maxValue)
-        //final MySeekBar mySeekBar = new MySeekBar(this, 50f, 3, 19f, 59f);
+        final MySeekBar mySeekBar = new MySeekBar(this, 50f, 3, 19f, 59f);
         mySeekBar.addAsListener(this);
 
         // add it to the layout.
@@ -36,7 +36,12 @@ public class MainActivity extends AppCompatActivity implements MySeekBar.MySeekb
     }
 
     @Override
-    public void onValueChanged(int value, MySeekBar mySeekBar) {
-        ((TextView)findViewById(R.id.sliderValue)).setText(String.valueOf(value));
+    public void onValueChanged(List<Float> values, MySeekBar mySeekBar) {
+        String strValue = String.valueOf((int)values.get(0).floatValue());
+
+        for (int i = 1; i < values.size(); i++) {
+            strValue += String.valueOf(",\t" + (int)values.get(i).floatValue());
+        }
+        ((TextView)findViewById(R.id.sliderValue)).setText(strValue);
     }
 }
