@@ -15,6 +15,10 @@ import java.util.List;
 /**
  * Created by mike on 6/14/2017.
  * see https://github.com/anothem/android-range-seek-bar/blob/master/rangeseekbar/src/main/java/org/florescu/android/rangeseekbar/RangeSeekBar.java
+ *
+ *
+ * My seek bar displays an array of the values with the first value always belonging to the same thumb, second with second thumb etc
+ *
  */
 
 public class MySeekBar extends View
