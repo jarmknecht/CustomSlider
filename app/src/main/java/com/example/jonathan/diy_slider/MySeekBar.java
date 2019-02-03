@@ -42,6 +42,7 @@ public class MySeekBar extends View
     private ArrayList<MySeekbarListener> listeners;
     Paint myPaint;
     Paint movingPaint;
+    Paint arcPaint;
 
     public interface MySeekbarListener {
         public void onValueChanged(List<Float> values, MySeekBar mySeekBar);
@@ -67,6 +68,13 @@ public class MySeekBar extends View
         movingPaint.setAntiAlias(true);
         movingPaint.setTextSize(90f);
 
+        arcPaint = new Paint();
+        arcPaint.setStyle(Paint.Style.STROKE);
+        arcPaint.setColor(0xff101010);
+        arcPaint.setStrokeWidth(5f);
+        arcPaint.setAntiAlias(true);
+        arcPaint.setTextSize(90f);
+
         radiusOfThumb = thumbRadius;
         topPadding = radiusOfThumb + thumbPadding;
 
@@ -79,7 +87,7 @@ public class MySeekBar extends View
 
         for (int i = 0; i < numThumbs; i++) {
             values.add(minValue);
-            circleCenters.add(new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding));
+            circleCenters.add(new PointF(viewTopLeft.x, viewTopLeft.y));
 
         }
         //circleCenter = new PointF(viewTopLeft.x + radiusOfThumb, viewTopLeft.y + topPadding);
@@ -114,9 +122,12 @@ public class MySeekBar extends View
         for (PointF point : circleCenters) {
             canvas.drawCircle(point.x, point.y, radiusOfThumb, myPaint);
         }
-        drawLineFromPoints (new PointF(viewTopLeft.x, viewTopLeft.y + topPadding),
-                new PointF(viewBottomRight.x, viewTopLeft.y + topPadding),canvas,myPaint);
-        //TODO: should i change the color?
+        float widthOfCurve = this.getRight();
+        float heightOfCurve = this.getBottom() * 2;
+        //drawLineFromPoints (viewTopLeft, viewBottomRight,canvas,myPaint);
+        //left of arc(width), top of arc, right or arc (width), bottom of arc (height), startAngle, sweepAngle, useCenter, paint
+        canvas.drawArc(-widthOfCurve, 0, widthOfCurve, heightOfCurve, 270f, 90f,false, arcPaint);
+
         if (selectedCircle != null) {
             if (isMoving) {
                 canvas.drawCircle(circleCenters.get(selectedCircle).x, circleCenters.get(selectedCircle).y, radiusOfThumb, movingPaint);
@@ -145,19 +156,19 @@ public class MySeekBar extends View
                 // get the location of the finger down.
                 if (selectedCircle != null) {
                     isMoving = true;
-                    if (event.getX() < viewTopLeft.x + radiusOfThumb) {
-                        circleCenters.get(selectedCircle).x = viewTopLeft.x + radiusOfThumb;
-                    }
-                    else if (event.getX() > viewBottomRight.x - radiusOfThumb) {
-                        circleCenters.get(selectedCircle).x = viewBottomRight.x - radiusOfThumb;
-                    }
-                    else {
-                        circleCenters.get(selectedCircle).x = event.getX();
+                    float xVal = event.getX();
+                    float yVal = event.getY();
+
+                    if (event.getX() < viewTopLeft.x) {
+                        xVal = viewTopLeft.x;
                     }
 
-                    circleCenters.get(selectedCircle).y = viewTopLeft.y + topPadding;
-                    values.set(selectedCircle, minValue + (maxValue - minValue) * ((circleCenters.get(selectedCircle).x - (viewTopLeft.x + radiusOfThumb)) /
-                            ((viewBottomRight.x - radiusOfThumb) - (viewTopLeft.x + radiusOfThumb))));
+                    if (event.getY() > viewBottomRight.y) {
+                        yVal = viewBottomRight.y;
+                    }
+
+                    calculateThumbPos(xVal, yVal, selectedCircle);
+
                     for (MySeekbarListener listener : listeners) {
                         listener.onValueChanged(values, this);
                     }
@@ -177,6 +188,34 @@ public class MySeekBar extends View
 
     public void addAsListener(MySeekbarListener listener) {
         listeners.add(listener);
+    }
+
+    private void calculateThumbPos(float x, float y, Integer selectedCircle) {
+        // this is the vector from o (origin topLeft and bottomRight value) to p (x, y) v = p - o
+        PointF vector = new PointF(x - this.viewTopLeft.x, y - this.viewBottomRight.y);
+
+        double magnitudeOfVector = Math.sqrt(Math.pow(vector.x, 2) + Math.pow(vector.y, 2));
+
+        // normalizes the vector by dividing by its magnitude/length
+        vector.x /= magnitudeOfVector;
+        vector.y /= magnitudeOfVector;
+
+        double theta = Math.atan(Math.abs(vector.y) / Math.abs(vector.x));
+
+        float radiusX = viewBottomRight.x - viewTopLeft.x;
+        float radiusY = viewBottomRight.y - viewTopLeft.y;
+
+        double radius = (radiusX * radiusY) / Math.sqrt((Math.pow(radiusX, 2) * Math.pow(Math.sin(theta), 2)
+        + Math.pow(radiusY, 2) * Math.pow(Math.cos(theta), 2)));
+
+        PointF t = new PointF((float)(this.viewTopLeft.x + (vector.x * radius)), (float)(this.viewBottomRight.y +
+                (vector.y * radius)));
+
+        circleCenters.get(selectedCircle).x = t.x;
+        circleCenters.get(selectedCircle).y = t.y;
+        //times theta by 180 to get degrees
+        values.set(selectedCircle, (float)(minValue + (maxValue - minValue) * theta * 180f
+        / (Math.PI * 90f)));
     }
 
 
