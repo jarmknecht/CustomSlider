@@ -214,8 +214,7 @@ public class MySeekBar extends View
         circleCenters.get(selectedCircle).x = t.x;
         circleCenters.get(selectedCircle).y = t.y;
         //times theta by 180 to get degrees
-        values.set(selectedCircle, (float)(minValue + (maxValue - minValue) * theta * 180f
-        / (Math.PI * 90f)));
+        values.set(selectedCircle, (float)((maxValue + (minValue - maxValue) * (theta * 180f / (Math.PI * 90f)))));
     }
 
 
