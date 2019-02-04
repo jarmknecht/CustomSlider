@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity implements MySeekBar.MySeekb
         //instantiate my two thumbed seekbar.
         //final MySeekBar mySeekBar = new MySeekBar(this);
         //Parameters for constructor:
-        // float thumbRadius, float vertPadding(vertical padding), percent of screen widget takes up, int numThumbs, float value at top of ellipse, float value at bottom of ellipse)
+        // float thumbRadius, float vertPadding(vertical padding for thumb to show up on screen), percent of screen widget takes up, int numThumbs, float value at top of ellipse, float value at bottom of ellipse)
         final MySeekBar mySeekBar = new MySeekBar(this, 50f, 3f, 100f, 3, 5f, 1023f);
         mySeekBar.addAsListener(this);
 
